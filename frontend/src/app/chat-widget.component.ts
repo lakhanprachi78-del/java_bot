@@ -18,7 +18,7 @@ import {
   ChatMessage,
   ChatAction,
   QUERY_TYPES,
-  STATUS_OPTIONS,
+  STATUS_CATEGORIES,
   SKALEUP_SUGGESTED_QUESTIONS,
   FEEDBACK_TAGS,
   BotSource
@@ -532,7 +532,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     this.resetStatusContext();
     this.flow = FlowState.QUERY_TYPE;
     this.selectedQueryType = null;
-    this.setInputEnabled(false);
+    this.setInputEnabled(true, 'Describe your search');
 
     const actions: ChatAction[] = [
       ...Object.entries(QUERY_TYPES).map(([key, def]) => ({
@@ -562,20 +562,47 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     this.setInputEnabled(true, queryDef.placeholder);
   }
 
+  // Top-level "Find by Status" menu: Sales, Credit, Commercial, Operations, Discrepant
   private showStatusOptions(): void {
     this.flow = FlowState.AWAITING_INPUT;
     this.selectedQueryType = 'status';
     this.setInputEnabled(false);
 
     const actions: ChatAction[] = [
-      ...STATUS_OPTIONS.map((label) => ({
-        label,
-        onClick: () => this.selectStatus(label)
+      ...STATUS_CATEGORIES.map((category) => ({
+        label: category.label,
+        onClick: () => this.selectStatusCategory(category)
       })),
       { label: '⬅ Back to main menu', onClick: () => this.showWelcomeMenuAgain() }
     ];
 
     this.appendBotMessage('Which application stage would you like to check?', { actions });
+  }
+
+  // A category was tapped: if it has sub-options (Sales, Discrepant) open the
+  // second-level menu; otherwise it's a leaf status (Credit, Commercial,
+  // Operations) and we run the query directly.
+  private selectStatusCategory(category: { label: string; value?: string; subOptions?: string[] }): void {
+    if (category.subOptions && category.subOptions.length > 0) {
+      this.showStatusSubOptions(category.label, category.subOptions);
+      return;
+    }
+    this.selectStatus(category.value ?? category.label);
+  }
+
+  private showStatusSubOptions(categoryLabel: string, subOptions: string[]): void {
+    this.setInputEnabled(false);
+
+    const actions: ChatAction[] = [
+      ...subOptions.map((label) => ({
+        label,
+        onClick: () => this.selectStatus(label)
+      })),
+      { label: '⬅ Back to status list', onClick: () => this.showStatusOptions() },
+      { label: '⬅ Back to main menu', onClick: () => this.showWelcomeMenuAgain() }
+    ];
+
+    this.appendBotMessage(`Which ${categoryLabel} stage?`, { actions });
   }
 
   private async selectStatus(label: string): Promise<void> {
@@ -685,7 +712,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     }
 
     let apiMessage = trimmed;
-    const DIRECT_FIELDS = new Set(['application_id', 'applicant_name', 'applicant_email']);
+    const DIRECT_FIELDS = new Set(['application_id', 'applicant_name']);
     let directField: string | null = null;
 
     if (this.selectedQueryType && this.flow === FlowState.AWAITING_INPUT) {

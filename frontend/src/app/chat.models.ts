@@ -32,6 +32,15 @@ export interface QueryTypeDef {
   validate?: (value: string) => string | null;
 }
 
+// A status category shown under "Find by Status".
+// - If `subOptions` is present, clicking this category opens a second menu of leaf statuses.
+// - If `subOptions` is absent, `value` IS the leaf status sent straight to the backend.
+export interface StatusCategory {
+  label: string;
+  value?: string;
+  subOptions?: string[];
+}
+
 export interface ChatAction {
   label: string;
   onClick: () => void;
@@ -59,10 +68,11 @@ export const RELATIVE_DATE_PATTERN =
 export const DATE_LOOKING_PATTERN =
   /\d{1,4}[/-]\d{1,2}[/-]\d{1,4}|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/i;
 
+// Object key order = menu button order shown under "Know About Your Application".
 export const QUERY_TYPES: Record<string, QueryTypeDef> = {
   applicant_name: {
     label: 'Applicant Name',
-    prompt: 'Enter applicant name',
+    prompt: 'Enter Applicant Name',
     placeholder: 'e.g. Rahul Sharma',
     buildMessage: (value) => `Show applications for applicant name: ${value}`,
     validate: (value) => {
@@ -76,29 +86,23 @@ export const QUERY_TYPES: Record<string, QueryTypeDef> = {
       return null;
     }
   },
-  applicant_email: {
-    label: 'Applicant Email',
-    prompt: 'Enter applicant email',
-    placeholder: 'e.g. rahul.sharma@example.com',
-    buildMessage: (value) => `Show applications for applicant email: ${value}`,
+  application_id: {
+    label: 'Application ID / LAF ID',
+    prompt: 'Please enter Application ID / LAF ID',
+    placeholder: 'e.g. APP-2024-00123',
+    buildMessage: (value) => `application_id:${value}`,
     validate: (value) => {
       const v = value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
-        return "That doesn't look like a valid email address. Please enter the applicant's email, e.g. rahul.sharma@example.com.";
+      if (!/^[A-Za-z0-9-]{5,30}$/.test(v)) {
+        return "That doesn't look like a valid Application ID / LAF ID. It should be a short alphanumeric code, e.g. LUGL637520260810103918.";
       }
       return null;
     }
   },
-  status: {
-    label: 'Status of Application',
-    prompt: 'Please enter the application status',
-    placeholder: 'e.g. credit assessment, pre-login',
-    buildMessage: (value) => `Show applications with status: ${value}`
-  },
   date_time: {
-    label: 'Time / Date',
-    prompt: 'Please enter a date or time period',
-    placeholder: 'e.g. today, 2024-08-04, last week',
+    label: 'Find by Time/Date',
+    prompt: 'Enter Date or Time',
+    placeholder: 'yesterday, today, last week, last month…',
     buildMessage: (value) => `Find applications created on or around: ${value}`,
     validate: (value) => {
       const v = value.trim();
@@ -110,37 +114,22 @@ export const QUERY_TYPES: Record<string, QueryTypeDef> = {
       return null;
     }
   },
-  application_id: {
-    label: 'Application ID / LAF ID',
-    prompt: 'Please enter Application ID or LAF ID',
-    placeholder: 'e.g. APP-2024-00123',
-    buildMessage: (value) => `application_id:${value}`,
-    validate: (value) => {
-      const v = value.trim();
-      if (!/^[A-Za-z0-9-]{5,30}$/.test(v)) {
-        return "That doesn't look like a valid Application ID / LAF ID. It should be a short alphanumeric code, e.g. LUGL637520260810103918.";
-      }
-      return null;
-    }
-  },
-  other: {
-    label: 'Other',
-    prompt: "Please describe what you'd like to know about your application",
-    placeholder: 'Type your question…',
-    buildMessage: (value) => value
+  status: {
+    label: 'Find by Status',
+    prompt: 'Which application stage would you like to check?',
+    placeholder: 'e.g. Pre Login, Credit, Commercial…',
+    buildMessage: (value) => `Show applications with status: ${value}`
   }
 };
 
-export const STATUS_OPTIONS: string[] = [
-  'Pre-login',
-  'Pre-login Review',
-  'Pre Login Discrepant',
-  'Sales Discrepant',
-  'Credit Assessment',
-  'Pre-Disbursement',
-  'Approved',
-  'Rejected',
-  'Sent to LMS'
+// Two-level "Find by Status" menu.
+// Top-level entries with `subOptions` open a second button menu; entries with
+// only `value` are leaf statuses sent straight to the backend as-is.
+export const STATUS_CATEGORIES: StatusCategory[] = [
+  { label: 'Sales', subOptions: ['Pre Login', 'Pre Login Review', 'Pre Login Discrepant', 'Sales Discrepant'] },
+  { label: 'Credit', value: 'Credit' },
+  { label: 'Commercial', value: 'Commercial' },
+  { label: 'Operations', value: 'Operations' }
 ];
 
 export const SKALEUP_SUGGESTED_QUESTIONS: string[] = [
