@@ -1,7 +1,6 @@
-target/
-*.class
+.env
 *.db
-.idea/
-*.iml
-.vscode/
-.DS_Store
+
+target/
+
+__pycache__/
