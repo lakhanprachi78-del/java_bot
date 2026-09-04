@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${LOS_DATABASE_URL:jdbc:postgresql://localhost:5432/los}
+    username: ${LOS_DATABASE_USERNAME:los}
+    password: ${LOS_DATABASE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate

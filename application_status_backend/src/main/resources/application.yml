@@ -1,0 +1,36 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: los-bot-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    show-sql: false
+
+los:
+  database:
+    url: ${LOS_DATABASE_URL:jdbc:postgresql://localhost:5432/los}
+    username: ${LOS_DATABASE_USERNAME:los}
+    password: ${LOS_DATABASE_PASSWORD:}
+  llm:
+    api-key: ${OPENROUTER_API_KEY:}
+    url: ${LLM_API_URL:https://generativelanguage.googleapis.com/v1beta/openai/chat/completions}
+    model: ${LLM_MODEL:openai/gpt-4o-mini}
+  app:
+    max-rows-returned: ${MAX_ROWS_RETURNED:25}
+  handoff:
+    rag-chat-url: ${RAG_CHAT_URL:http://127.0.0.1:8000/api/chat}
+  support:
+    email: ${SUPPORT_EMAIL:skaleupprodsupport@ugrocapital.com}
+  logs:
+    query-db: ${LOS_QUERY_LOG_DB:los_query_log.db}
+    feedback-db: ${LOS_FEEDBACK_LOG_DB:los_feedback_log.db}
+
+logging:
+  level:
+    com.ugrocapital.losbot: INFO
