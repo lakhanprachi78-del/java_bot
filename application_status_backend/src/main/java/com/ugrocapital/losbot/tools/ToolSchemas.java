@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 public final class ToolSchemas {
+    // Keep these aligned with StatusGroups' aliases so a value the LLM picks
+    // here always resolves to every raw statuscode spelling in that branch.
     public static final List<String> STATUS_CODES = List.of(
-            "pre-login", "pre-login review", "pre login discrepant", "sales discrepant",
-            "credit assessment", "pre-disbursement", "approved", "rejected", "sent to lms");
+            "pre login", "pre login review", "pre login discrepant", "sales discrepant",
+            "credit assessment", "pre disbursement", "sent to lms", "sent to lms failed",
+            "approved", "rejected");
 
     private static final Map<String, Object> STRING = Map.of("type", "string");
     private static final Map<String, Object> INTEGER = Map.of("type", "integer");

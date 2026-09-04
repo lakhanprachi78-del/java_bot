@@ -34,11 +34,12 @@ export interface QueryTypeDef {
 
 // A status category shown under "Find by Status".
 // - If `subOptions` is present, clicking this category opens a second menu of leaf statuses.
-// - If `subOptions` is absent, `value` IS the leaf status sent straight to the backend.
+// - If `subOptions` is absent, `value` IS the leaf status sent straight to the backend
+//   (must match a group key in the backend's StatusGroups class).
 export interface StatusCategory {
   label: string;
   value?: string;
-  subOptions?: string[];
+  subOptions?: StatusCategory[];
 }
 
 export interface ChatAction {
@@ -122,14 +123,30 @@ export const QUERY_TYPES: Record<string, QueryTypeDef> = {
   }
 };
 
-// Two-level "Find by Status" menu.
+// Two-level "Find by Status" menu — the 4 main branches.
 // Top-level entries with `subOptions` open a second button menu; entries with
-// only `value` are leaf statuses sent straight to the backend as-is.
+// only `value` are leaf statuses sent straight to the backend as a group key
+// (the backend's StatusGroups class maps each key to every raw statuscode
+// spelling stored in the database for that stage).
 export const STATUS_CATEGORIES: StatusCategory[] = [
-  { label: 'Sales', subOptions: ['Pre Login', 'Pre Login Review', 'Pre Login Discrepant', 'Sales Discrepant'] },
-  { label: 'Credit', value: 'Credit' },
-  { label: 'Commercial', value: 'Commercial' },
-  { label: 'Operations', value: 'Operations' }
+  {
+    label: 'Sales',
+    subOptions: [
+      { label: 'Pre-Login', value: 'sales_pre_login' },
+      { label: 'Pre-Login Review', value: 'sales_pre_login_review' },
+      { label: 'Pre-Login Discrepant', value: 'sales_pre_login_discrepant' },
+      { label: 'Sales Discrepant', value: 'sales_discrepant' }
+    ]
+  },
+  { label: 'Credit Assessment', value: 'credit_assessment' },
+  { label: 'Pre-Disbursement', value: 'pre_disbursement' },
+  {
+    label: 'Disbursement',
+    subOptions: [
+      { label: 'Sent to LMS', value: 'disbursement_sent_to_lms' },
+      { label: 'Sent to LMS Failed', value: 'disbursement_sent_to_lms_failed' }
+    ]
+  }
 ];
 
 export const SKALEUP_SUGGESTED_QUESTIONS: string[] = [

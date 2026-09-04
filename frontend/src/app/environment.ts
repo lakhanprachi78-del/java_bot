@@ -9,7 +9,7 @@ export interface Environment {
 export const environment: Environment = {
   production: false,
   sessionId: 'session-chandan',
-  losWsUrl: 'ws://127.0.0.1:5000/ws',
+  losWsUrl: 'ws://127.0.0.1:8080/ws',
   skaleupWsUrl: 'ws://127.0.0.1:8000/ws',
   thinkingAfterMs: 4000
 };

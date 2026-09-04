@@ -19,6 +19,7 @@ import {
   ChatAction,
   QUERY_TYPES,
   STATUS_CATEGORIES,
+  StatusCategory,
   SKALEUP_SUGGESTED_QUESTIONS,
   FEEDBACK_TAGS,
   BotSource
@@ -51,6 +52,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   public hasGreeted = false;
 
   public activeStatusFilter: string | null = null;
+  public activeStatusLabel: string | null = null;
   public statusExtraFilter: string | null = null;
   public statusOffset = 0;
 
@@ -562,7 +564,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     this.setInputEnabled(true, queryDef.placeholder);
   }
 
-  // Top-level "Find by Status" menu: Sales, Credit, Commercial, Operations, Discrepant
+  // Top-level "Find by Status" menu: Sales, Credit Assessment, Pre-Disbursement, Disbursement
   private showStatusOptions(): void {
     this.flow = FlowState.AWAITING_INPUT;
     this.selectedQueryType = 'status';
@@ -579,24 +581,24 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     this.appendBotMessage('Which application stage would you like to check?', { actions });
   }
 
-  // A category was tapped: if it has sub-options (Sales, Discrepant) open the
-  // second-level menu; otherwise it's a leaf status (Credit, Commercial,
-  // Operations) and we run the query directly.
-  private selectStatusCategory(category: { label: string; value?: string; subOptions?: string[] }): void {
+  // A category was tapped: if it has sub-options (Sales, Disbursement) open
+  // the second-level menu; otherwise it's a leaf status (Credit Assessment,
+  // Pre-Disbursement) and we run the query directly.
+  private selectStatusCategory(category: StatusCategory): void {
     if (category.subOptions && category.subOptions.length > 0) {
       this.showStatusSubOptions(category.label, category.subOptions);
       return;
     }
-    this.selectStatus(category.value ?? category.label);
+    this.selectStatus(category.value ?? category.label, category.label);
   }
 
-  private showStatusSubOptions(categoryLabel: string, subOptions: string[]): void {
+  private showStatusSubOptions(categoryLabel: string, subOptions: StatusCategory[]): void {
     this.setInputEnabled(false);
 
     const actions: ChatAction[] = [
-      ...subOptions.map((label) => ({
-        label,
-        onClick: () => this.selectStatus(label)
+      ...subOptions.map((option) => ({
+        label: option.label,
+        onClick: () => this.selectStatus(option.value ?? option.label, option.label)
       })),
       { label: '⬅ Back to status list', onClick: () => this.showStatusOptions() },
       { label: '⬅ Back to main menu', onClick: () => this.showWelcomeMenuAgain() }
@@ -605,11 +607,14 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     this.appendBotMessage(`Which ${categoryLabel} stage?`, { actions });
   }
 
-  private async selectStatus(label: string): Promise<void> {
-    this.activeStatusFilter = label.toLowerCase();
+  // `value` is what's sent to the backend (a StatusGroups group key, e.g.
+  // "sales_pre_login"); `displayLabel` is what's shown in the chat bubble.
+  private async selectStatus(value: string, displayLabel?: string): Promise<void> {
+    this.activeStatusFilter = value.toLowerCase();
+    this.activeStatusLabel = displayLabel ?? value;
     this.statusExtraFilter = null;
     this.statusOffset = 0;
-    await this.runStatusQuery(label);
+    await this.runStatusQuery(displayLabel ?? value);
   }
 
   private async giveFiveMoreStatusResults(): Promise<void> {
@@ -619,12 +624,17 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
 
   private resetStatusContext(): void {
     this.activeStatusFilter = null;
+    this.activeStatusLabel = null;
     this.statusExtraFilter = null;
     this.statusOffset = 0;
   }
 
   private buildStatusApiMessage(): string {
-    let msg = `Show applications with status: ${this.activeStatusFilter}`;
+    // Use the human-readable label (e.g. "Pre-Login Review"), not the raw
+    // group key (e.g. "sales_pre_login_review") — this text goes to the LLM
+    // free-chat path, not straight to StatusGroups, so it needs to read
+    // naturally for the model to pick the right status via search_by_status.
+    let msg = `Show applications with status: ${this.activeStatusLabel ?? this.activeStatusFilter}`;
     if (this.statusExtraFilter) {
       msg += ` and ${this.statusExtraFilter}`;
     }

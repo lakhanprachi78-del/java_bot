@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Repository;
 
 import com.ugrocapital.losbot.auth.AuthContext;
 import com.ugrocapital.losbot.config.AppProperties;
+import com.ugrocapital.losbot.directquery.StatusGroups;
 import com.ugrocapital.losbot.entity.ApplicationApplicant;
 import com.ugrocapital.losbot.entity.ApplicationApplicantEmail;
 import com.ugrocapital.losbot.entity.LoanApplication;
@@ -74,8 +76,17 @@ public class ApplicationQueryRepository {
     }
 
     public SearchResult searchByStatus(String statusCode, AuthContext auth, int offset, int limit) {
+        List<String> groupCodes = StatusGroups.resolve(statusCode);
+        if (groupCodes != null) {
+            return search(auth, offset, limit, (cb, root) -> statusInPredicate(cb, root, groupCodes));
+        }
         return search(auth, offset, limit,
                 (cb, root) -> cb.equal(cb.lower(root.get("statusCode")), statusCode.trim().toLowerCase()));
+    }
+
+    private Predicate statusInPredicate(CriteriaBuilder cb, Root<LoanApplication> root, List<String> statusCodes) {
+        List<String> lowered = statusCodes.stream().map(code -> code.toLowerCase(Locale.ROOT)).toList();
+        return cb.lower(root.get("statusCode")).in(lowered);
     }
 
     public SearchResult combinedSearch(CombinedSearchParams params, AuthContext auth) {

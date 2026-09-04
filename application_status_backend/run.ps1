@@ -30,5 +30,5 @@ if (-not $env:LOS_DATABASE_URL) {
     throw "DATABASE_URL must be a PostgreSQL URL"
 }
 
-$maven = "C:\Users\samarth.chavan\.tools\maven\apache-maven-3.9.6\bin\mvn.cmd"
+$maven = "C:\Users\prachi.lakhan\Downloads\apache-maven-3.9.16-bin\apache-maven-3.9.16\bin\mvn.cmd"
 & $maven spring-boot:run
