@@ -712,7 +712,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     }
 
     let apiMessage = trimmed;
-    const DIRECT_FIELDS = new Set(['application_id', 'applicant_name']);
+    const DIRECT_FIELDS = new Set(['application_id', 'applicant_name', 'date_time']);
     let directField: string | null = null;
 
     if (this.selectedQueryType && this.flow === FlowState.AWAITING_INPUT) {
